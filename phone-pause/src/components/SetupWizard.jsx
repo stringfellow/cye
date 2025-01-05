@@ -6,6 +6,7 @@ function SetupWizard({ onComplete, preferences: existingPreferences }) {
     hasPet: null,
     allowTasks: true,
     hasNature: true,
+    hasAphantasia: false,
   });
 
   // Initialize form with existing preferences when available
@@ -38,7 +39,7 @@ function SetupWizard({ onComplete, preferences: existingPreferences }) {
               }
             >
               <option value="">Choose...</option>
-              <option value="">No</option>
+              <option value="false">No</option>
               <option value="many">Many kinds!</option>
               <option value="dog">A dog or pack</option>
               <option value="cat">A cat or clowder</option>
@@ -79,6 +80,23 @@ function SetupWizard({ onComplete, preferences: existingPreferences }) {
             />
             Can generally see a tree, the sky, a plant or any other nature from
             a nearby window?
+          </label>
+        </div>
+
+        <div className="mb-4">
+          <label className="block mb-2">
+            <input
+              type="checkbox"
+              checked={preferences.hasAphantasia}
+              onChange={(e) =>
+                setPreferences({
+                  ...preferences,
+                  hasAphantasia: e.target.checked,
+                })
+              }
+              className="mr-2"
+            />
+            Do you have aphantasia (inability to visualise in your mind's eye)?
           </label>
         </div>
 
