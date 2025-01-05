@@ -6,17 +6,21 @@ import CircuitBreaker from "./components/CircuitBreaker";
 function App() {
   const [preferences, setPreferences] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
-  const [doSetup, setDoSetup] = useState(true);
-  // const [location, setLocation] = useState("home"); // Placeholder
+  const [showSetup, setShowSetup] = useState(true);
+  const [location, setLocation] = useState("home");
 
   useEffect(() => {
     const saved = loadPreferences();
-    if (saved) setPreferences(saved);
+    if (saved) {
+      setPreferences(saved);
+      setShowSetup(false);
+    }
     setIsLoading(false);
   }, []);
 
-  const becomeReady = () => {
-    setDoSetup(false);
+  const handleSetupComplete = (newPreferences) => {
+    setPreferences(newPreferences);
+    setShowSetup(false);
   };
 
   if (isLoading) return <div>Loading...</div>;
@@ -24,13 +28,21 @@ function App() {
   return (
     <div>
       <h1 className="text-2xl font-bold mb-4">Cye (/sʌɪ/)</h1>
-      {preferences || !doSetup ? (
+      {showSetup ? (
+        <SetupWizard
+          onComplete={handleSetupComplete}
+          preferences={preferences}
+        />
+      ) : (
         <div>
-          <button onClick={() => setDoSetup(true)}>?</button>
+          <button
+            onClick={() => setShowSetup(true)}
+            className="mb-4 px-3 py-1 bg-gray-200 rounded"
+          >
+            ?
+          </button>
           <CircuitBreaker preferences={preferences} location={location} />
         </div>
-      ) : (
-        <SetupWizard onComplete={becomeReady} doSetup={doSetup} />
       )}
     </div>
   );
