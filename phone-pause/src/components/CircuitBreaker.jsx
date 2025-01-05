@@ -53,11 +53,13 @@ function CircuitBreaker({ preferences, location }) {
   if (!preferences) return <p>...</p>;
 
   return (
-    <div className="p-4 max-w-md mx-auto">
-      <div className="text-xl mb-4">{circuitBreakerText}</div>
+    <div className="text-center">
+      <div className="text-xl mb-8 text-gray-100">{circuitBreakerText}</div>
       <button
         onClick={fadeOutAndTimeOut}
-        className="bg-blue-500 text-white p-2 rounded hover:bg-blue-600"
+        className="px-6 py-3 mb-8 bg-gray-800 hover:bg-gray-700 hover:text-gray-300 text-gray-500 
+                   rounded transition-colors focus:ring-2 focus:ring-gray-600 
+                   focus:ring-offset-2 focus:ring-offset-gray-900"
       >
         Ok. Thank you, me
       </button>
