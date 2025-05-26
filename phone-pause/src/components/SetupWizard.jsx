@@ -3,7 +3,7 @@ import { savePreferences } from "../utils/storage";
 
 function SetupWizard({ onComplete, preferences: existingPreferences }) {
   const [preferences, setPreferences] = useState({
-    hasPet: null,
+    hasPet: "",
     allowTasks: true,
     hasNature: true,
     hasAphantasia: false,
@@ -24,13 +24,24 @@ function SetupWizard({ onComplete, preferences: existingPreferences }) {
 
   return (
     <div className="p-4 max-w-md mx-auto">
-      <form onSubmit={handleSubmit}>
+      <p className="mb-4 text-gray-400">
+        Cye ("Close your eyes", or "sigh") is a circuit breaker app - when you
+        feel the need to open an app on your phone for a dopamine hit (but you
+        don't really know why you're doing it), open this instead.
+      </p>
+      <p className="mb-8 text-gray-400">
+        Cye will offer you a suggestion, based on your preferences and location
+        if possible, to make you look away from your phone at least momentarily,
+        which can sometimes be all we need to disrupt the cycle of looking for
+        something to do on it.
+      </p>
+      <form onSubmit={handleSubmit} className="space-y-4 text-gray-400">
         <div className="mb-4">
           <label className="block mb-2">
             Do you have a pet?
             <select
-              className="block w-full mt-1 p-2 border rounded"
-              value={preferences.hasPet === null ? "" : preferences.hasPet}
+              className="block w-full mt-1 p-2 border rounded text-gray-100 bg-gray-900"
+              value={preferences.hasPet}
               onChange={(e) =>
                 setPreferences({
                   ...preferences,
@@ -102,7 +113,7 @@ function SetupWizard({ onComplete, preferences: existingPreferences }) {
 
         <button
           type="submit"
-          className="w-full bg-blue-500 text-white p-2 rounded hover:bg-blue-600"
+          className="w-full bg-blue-900 text-gray-100 p-2 rounded hover:bg-blue-800"
         >
           Save Preferences
         </button>
