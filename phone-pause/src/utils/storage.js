@@ -1,6 +1,7 @@
 // utils/storage.js
 
 const COOLDOWN_KEY = "nextPromptAvailableAt";
+const ACTIVE_PROMPT_KEY = "activePrompt";
 
 // Save data to localStorage
 export const savePreferences = (preferences) => {
@@ -39,6 +40,37 @@ export const saveCooldownUntil = (timestamp) => {
     return true;
   } catch (error) {
     console.error("Failed to save prompt cooldown:", error);
+    return false;
+  }
+};
+
+export const markPromptActive = () => {
+  try {
+    localStorage.setItem(ACTIVE_PROMPT_KEY, "true");
+    return true;
+  } catch (error) {
+    console.error("Failed to save active prompt state:", error);
+    return false;
+  }
+};
+
+export const consumeActivePrompt = () => {
+  try {
+    const wasActive = localStorage.getItem(ACTIVE_PROMPT_KEY) === "true";
+    localStorage.removeItem(ACTIVE_PROMPT_KEY);
+    return wasActive;
+  } catch (error) {
+    console.error("Failed to load active prompt state:", error);
+    return null;
+  }
+};
+
+export const clearActivePrompt = () => {
+  try {
+    localStorage.removeItem(ACTIVE_PROMPT_KEY);
+    return true;
+  } catch (error) {
+    console.error("Failed to clear active prompt state:", error);
     return false;
   }
 };

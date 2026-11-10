@@ -25,5 +25,5 @@ body {
 }
 
 .circuit-breaker-prompt {
-  animation: cye-prompt-fade 120s linear 30s forwards;
+  animation: cye-prompt-fade 60s linear 30s forwards;
 }

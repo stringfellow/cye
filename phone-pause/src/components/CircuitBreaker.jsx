@@ -2,10 +2,28 @@ import { useState, useEffect, useCallback } from "react";
 import PropTypes from "prop-types";
 import { getValidCircuitBreakers } from "../utils/circuitBreakers";
 import { normalizeCooldownMinutes } from "../utils/preferences";
-import { loadCooldownUntil, saveCooldownUntil } from "../utils/storage";
+import {
+  clearActivePrompt,
+  loadCooldownUntil,
+  markPromptActive,
+  saveCooldownUntil,
+} from "../utils/storage";
 
-function CircuitBreaker({ preferences, location, onPreferencesChange }) {
+function CircuitBreaker({
+  preferences,
+  location,
+  onPreferencesChange,
+  promptStorageUnavailable: promptStorageUnavailableOnLoad,
+}) {
   const [cooldown, setCooldown] = useState(() => {
+    if (promptStorageUnavailableOnLoad) {
+      return {
+        until: 0,
+        ready: false,
+        storageUnavailable: true,
+      };
+    }
+
     const until = loadCooldownUntil();
     return {
       until,
@@ -16,6 +34,9 @@ function CircuitBreaker({ preferences, location, onPreferencesChange }) {
   const [prompt, setPrompt] = useState(null);
   const [promptVersion, setPromptVersion] = useState(0);
   const [markOneTimeTodoDone, setMarkOneTimeTodoDone] = useState(false);
+  const [promptStorageUnavailable, setPromptStorageUnavailable] = useState(
+    promptStorageUnavailableOnLoad
+  );
 
   const pickNewCircuitBreaker = useCallback(() => {
     const validCircuitBreakers = getValidCircuitBreakers(
@@ -42,6 +63,9 @@ function CircuitBreaker({ preferences, location, onPreferencesChange }) {
 
   useEffect(() => {
     if (cooldown.ready) {
+      if (!markPromptActive()) {
+        setPromptStorageUnavailable(true);
+      }
       pickNewCircuitBreaker();
     }
   }, [cooldown.ready, pickNewCircuitBreaker]);
@@ -68,6 +92,22 @@ function CircuitBreaker({ preferences, location, onPreferencesChange }) {
       document.removeEventListener("visibilitychange", handleVisibilityChange);
   }, []);
 
+  const startCooldown = () => {
+    const cooldownMinutes = normalizeCooldownMinutes(
+      preferences.cooldownMinutes
+    );
+    const until = Date.now() + cooldownMinutes * 60 * 1000;
+    const saved = saveCooldownUntil(until);
+    const activePromptCleared = clearActivePrompt();
+
+    setCooldown({
+      until,
+      ready: false,
+      storageUnavailable: !saved || !activePromptCleared,
+    });
+    setPrompt(null);
+  };
+
   const handleAcknowledge = () => {
     if (
       markOneTimeTodoDone &&
@@ -82,18 +122,7 @@ function CircuitBreaker({ preferences, location, onPreferencesChange }) {
       });
     }
 
-    const cooldownMinutes = normalizeCooldownMinutes(
-      preferences.cooldownMinutes
-    );
-    const until = Date.now() + cooldownMinutes * 60 * 1000;
-    const saved = saveCooldownUntil(until);
-
-    setCooldown({
-      until,
-      ready: false,
-      storageUnavailable: !saved,
-    });
-    setPrompt(null);
+    startCooldown();
   };
 
   if (!preferences) return <p>...</p>;
@@ -101,9 +130,17 @@ function CircuitBreaker({ preferences, location, onPreferencesChange }) {
   return (
     <div className="text-center">
       {cooldown.ready ? (
-        <>
-          <div key={promptVersion} className="circuit-breaker-prompt">
-            <div className="text-xl mb-8 text-gray-100">{prompt?.content}</div>
+        <div
+          key={promptVersion}
+          className="circuit-breaker-prompt"
+          onAnimationEnd={(event) => {
+            if (event.animationName === "cye-prompt-fade") {
+              startCooldown();
+            }
+          }}
+        >
+          <section className="mx-auto max-w-xl rounded border border-gray-700 bg-gray-800/60 p-6 shadow-md">
+            <div className="mb-6 text-xl text-gray-100">{prompt?.content}</div>
             {Number.isInteger(prompt?.oneTimeTodoIndex) && (
               <label className="mb-6 flex items-center justify-center gap-2 text-gray-300">
                 <input
@@ -116,14 +153,20 @@ function CircuitBreaker({ preferences, location, onPreferencesChange }) {
                 Mark this task done
               </label>
             )}
-            <button
-              onClick={handleAcknowledge}
-              className="mb-8 rounded-lg border border-blue-800 bg-blue-900 px-6 py-3 font-medium text-blue-100 shadow-md transition-colors hover:bg-blue-800 active:bg-blue-950 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-400 focus-visible:ring-offset-2 focus-visible:ring-offset-gray-900"
-            >
-              Ok. Thank you, me
-            </button>
-          </div>
-        </>
+            {promptStorageUnavailable && (
+              <p role="alert" className="mb-8 text-sm text-yellow-400">
+                Cye could not save this prompt on your device. Reloading may
+                show a different prompt.
+              </p>
+            )}
+          </section>
+          <button
+            onClick={handleAcknowledge}
+            className="mt-4 rounded-lg border border-blue-800 bg-blue-900 px-6 py-3 font-medium text-blue-100 shadow-md transition-colors hover:bg-blue-800 active:bg-blue-950 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-400 focus-visible:ring-offset-2 focus-visible:ring-offset-gray-900"
+          >
+            Ok. Thank you, me
+          </button>
+        </div>
       ) : (
         <div className="text-gray-500" aria-live="polite">
           <p>Take a moment away from your phone.</p>
@@ -152,6 +195,7 @@ CircuitBreaker.propTypes = {
   }).isRequired,
   location: PropTypes.string,
   onPreferencesChange: PropTypes.func.isRequired,
+  promptStorageUnavailable: PropTypes.bool,
 };
 
 export default CircuitBreaker;

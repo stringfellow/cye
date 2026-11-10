@@ -1,7 +1,15 @@
 import { useState, useEffect } from "react";
 import SetupWizard from "./components/SetupWizard";
-import { loadPreferences, savePreferences } from "./utils/storage";
-import { DEFAULT_PERMANENT_TODOS } from "./utils/preferences";
+import {
+  consumeActivePrompt,
+  loadPreferences,
+  saveCooldownUntil,
+  savePreferences,
+} from "./utils/storage";
+import {
+  DEFAULT_PERMANENT_TODOS,
+  normalizeCooldownMinutes,
+} from "./utils/preferences";
 import CircuitBreaker from "./components/CircuitBreaker";
 import "./index.css";
 
@@ -10,9 +18,12 @@ function App() {
   const [isLoading, setIsLoading] = useState(true);
   const [showSetup, setShowSetup] = useState(true);
   const [location, setLocation] = useState("home");
+  const [promptStorageUnavailable, setPromptStorageUnavailable] =
+    useState(false);
 
   useEffect(() => {
     const saved = loadPreferences();
+    const activePrompt = consumeActivePrompt();
     if (saved) {
       const loadedPreferences = {
         ...saved,
@@ -22,6 +33,18 @@ function App() {
       };
       if (!Array.isArray(saved.permanentTodos)) {
         savePreferences(loadedPreferences);
+      }
+      if (activePrompt === null) {
+        setPromptStorageUnavailable(true);
+      } else if (activePrompt) {
+        const cooldownUntil =
+          Date.now() +
+          normalizeCooldownMinutes(loadedPreferences.cooldownMinutes) *
+            60 *
+            1000;
+        if (!saveCooldownUntil(cooldownUntil)) {
+          setPromptStorageUnavailable(true);
+        }
       }
       setPreferences(loadedPreferences);
       setShowSetup(false);
@@ -71,6 +94,7 @@ function App() {
                 preferences={preferences}
                 location={location}
                 onPreferencesChange={handlePreferencesChange}
+                promptStorageUnavailable={promptStorageUnavailable}
               />
             </div>
           </div>
