@@ -4,7 +4,7 @@ import { getValidCircuitBreakers } from "../utils/circuitBreakers";
 import { normalizeCooldownMinutes } from "../utils/preferences";
 import { loadCooldownUntil, saveCooldownUntil } from "../utils/storage";
 
-function CircuitBreaker({ preferences, location }) {
+function CircuitBreaker({ preferences, location, onPreferencesChange }) {
   const [cooldown, setCooldown] = useState(() => {
     const until = loadCooldownUntil();
     return {
@@ -13,7 +13,8 @@ function CircuitBreaker({ preferences, location }) {
       storageUnavailable: until === null,
     };
   });
-  const [circuitBreakerText, setCircuitBreakerText] = useState("");
+  const [prompt, setPrompt] = useState(null);
+  const [markOneTimeTodoDone, setMarkOneTimeTodoDone] = useState(false);
 
   const pickNewCircuitBreaker = useCallback(() => {
     const validCircuitBreakers = getValidCircuitBreakers(
@@ -24,14 +25,17 @@ function CircuitBreaker({ preferences, location }) {
     const randomIndex = Math.floor(Math.random() * validCircuitBreakers.length);
     const curr = validCircuitBreakers[randomIndex];
     if (!curr) {
-      setCircuitBreakerText(<div>Nothing to see</div>);
+      setPrompt({ content: <div>Nothing to see</div> });
     } else {
-      setCircuitBreakerText(
-        typeof curr.render === "string"
-          ? curr.render
-          : curr.render({ preferences, location })
-      );
+      setPrompt({
+        content:
+          typeof curr.render === "string"
+            ? curr.render
+            : curr.render({ preferences, location }),
+        oneTimeTodoIndex: curr.oneTimeTodoIndex,
+      });
     }
+    setMarkOneTimeTodoDone(false);
   }, [location, preferences]);
 
   useEffect(() => {
@@ -63,6 +67,19 @@ function CircuitBreaker({ preferences, location }) {
   }, []);
 
   const handleAcknowledge = () => {
+    if (
+      markOneTimeTodoDone &&
+      Number.isInteger(prompt?.oneTimeTodoIndex) &&
+      preferences.oneTimeTodos?.[prompt.oneTimeTodoIndex]
+    ) {
+      onPreferencesChange({
+        ...preferences,
+        oneTimeTodos: preferences.oneTimeTodos.filter(
+          (_, index) => index !== prompt.oneTimeTodoIndex
+        ),
+      });
+    }
+
     const cooldownMinutes = normalizeCooldownMinutes(
       preferences.cooldownMinutes
     );
@@ -74,7 +91,7 @@ function CircuitBreaker({ preferences, location }) {
       ready: false,
       storageUnavailable: !saved,
     });
-    setCircuitBreakerText("");
+    setPrompt(null);
   };
 
   if (!preferences) return <p>...</p>;
@@ -84,8 +101,20 @@ function CircuitBreaker({ preferences, location }) {
       {cooldown.ready ? (
         <>
           <div className="text-xl mb-8 text-gray-100">
-            {circuitBreakerText}
+            {prompt?.content}
           </div>
+          {Number.isInteger(prompt?.oneTimeTodoIndex) && (
+            <label className="mb-6 flex items-center justify-center gap-2 text-gray-300">
+              <input
+                type="checkbox"
+                checked={markOneTimeTodoDone}
+                onChange={(event) =>
+                  setMarkOneTimeTodoDone(event.target.checked)
+                }
+              />
+              Mark this task done
+            </label>
+          )}
           <button
             onClick={handleAcknowledge}
             className="px-6 py-3 mb-8 bg-gray-800 hover:bg-gray-700 hover:text-gray-300 text-gray-500
@@ -118,8 +147,11 @@ CircuitBreaker.propTypes = {
     hasNature: PropTypes.bool,
     hasAphantasia: PropTypes.bool,
     cooldownMinutes: PropTypes.number,
+    permanentTodos: PropTypes.arrayOf(PropTypes.string),
+    oneTimeTodos: PropTypes.arrayOf(PropTypes.string),
   }).isRequired,
   location: PropTypes.string,
+  onPreferencesChange: PropTypes.func.isRequired,
 };
 
 export default CircuitBreaker;

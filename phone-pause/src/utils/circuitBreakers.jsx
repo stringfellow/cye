@@ -1,9 +1,7 @@
 const checkConditions = {
   PET: (prefs, petTypes) => petTypes.includes(prefs.petType),
   NATURE_VIEW: (prefs) => prefs.hasNatureView === true,
-  ALLOW_TASKS: (prefs) => prefs.allowTasks === true,
   NO_APHANTASIA: (prefs) => prefs.hasAphantasia === false,
-  LOCATION: (prefs, locations, currentLocation) => true,
 
   TIME_SUNSET: (prefs, time, sunsetTime) => {
     const diff = sunsetTime - time;
@@ -13,6 +11,41 @@ const checkConditions = {
     const hour = new Date(time).getHours();
     return hour >= 5 && hour <= 9;
   },
+};
+
+const formatPermanentTodo = (todo) => {
+  const prefixes = [
+    "A wee nudge: ",
+    "Take a breath and ",
+    "How about... ",
+  ];
+  const suffixes = [
+    ", g'wan",
+    " — just a wee bit",
+    ", you can do it",
+    ", you'll be glad for it",
+    ", maybe with a podcast?",
+  ];
+  const style = Math.floor(Math.random() * 4);
+
+  const withCapitalizedFirstLetter = todo.replace(/^./u, (letter) =>
+    letter.toUpperCase()
+  );
+  const withLowercaseFirstLetter = todo.replace(/^./u, (letter) =>
+    letter.toLowerCase()
+  );
+
+  const prefix =
+    prefixes[Math.floor(Math.random() * prefixes.length)];
+  const suffix =
+    suffixes[Math.floor(Math.random() * suffixes.length)];
+
+  if (style === 1) return `${prefix}${withLowercaseFirstLetter}`;
+  if (style === 2) return `${withCapitalizedFirstLetter}${suffix}`;
+  if (style === 3) {
+    return `${prefix}${withLowercaseFirstLetter}${suffix}`;
+  }
+  return withCapitalizedFirstLetter;
 };
 
 const circuitBreakers = [
@@ -60,22 +93,6 @@ const circuitBreakers = [
     },
   },
   {
-    id: 6,
-    render: "Laundry, g'won.",
-    conditions: [
-      { check: checkConditions.ALLOW_TASKS },
-      { check: checkConditions.LOCATION, args: [["home"]] },
-    ],
-  },
-  {
-    id: 7,
-    render: "Dishes, nice warm water on your hands. And some tunes perhaps!",
-    conditions: [
-      { check: checkConditions.ALLOW_TASKS },
-      { check: checkConditions.LOCATION, args: [["home"]] },
-    ],
-  },
-  {
     id: 8,
     render:
       "Turn phone upside down and balance something (like a pencil) on it somehow",
@@ -105,15 +122,6 @@ const circuitBreakers = [
     id: 12,
     render:
       "Go and look at the back of a drawer in your kitchen, nothing to do, just be curious!",
-  },
-  {
-    id: 13,
-    render:
-      "Anything need throwing out, recycling, posting? G'won, it'll only take a wee min",
-    conditions: [
-      { check: checkConditions.ALLOW_TASKS },
-      { check: checkConditions.LOCATION, args: [["home"]] },
-    ],
   },
   {
     id: 14,
@@ -168,7 +176,35 @@ export const getValidCircuitBreakers = (
   time = Date.now(),
   location = null
 ) => {
-  return circuitBreakers.filter(
+  const userTaskBreakers =
+    prefs.allowTasks === true
+      ? [
+          ["permanent", prefs.permanentTodos],
+          ["one-time", prefs.oneTimeTodos],
+        ].flatMap(([type, todos]) =>
+          Array.isArray(todos)
+            ? todos.flatMap((todo, index) => {
+                if (typeof todo !== "string" || todo.trim().length === 0) {
+                  return [];
+                }
+
+                const text = todo.trim();
+                return [
+                  {
+                    id: `user-${type}-${index}`,
+                    render:
+                      type === "permanent" && text.length <= 30
+                        ? () => formatPermanentTodo(text)
+                        : text,
+                    ...(type === "one-time" && { oneTimeTodoIndex: index }),
+                  },
+                ];
+              })
+            : []
+        )
+      : [];
+
+  return [...circuitBreakers, ...userTaskBreakers].filter(
     (circuitBreaker) =>
       !circuitBreaker?.conditions?.length ||
       circuitBreaker.conditions.every(({ check, args = [] }) =>

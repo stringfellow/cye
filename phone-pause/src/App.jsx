@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import SetupWizard from "./components/SetupWizard";
-import { loadPreferences } from "./utils/storage";
+import { loadPreferences, savePreferences } from "./utils/storage";
+import { DEFAULT_PERMANENT_TODOS } from "./utils/preferences";
 import CircuitBreaker from "./components/CircuitBreaker";
 import "./index.css";
 
@@ -13,7 +14,16 @@ function App() {
   useEffect(() => {
     const saved = loadPreferences();
     if (saved) {
-      setPreferences(saved);
+      const loadedPreferences = {
+        ...saved,
+        permanentTodos: Array.isArray(saved.permanentTodos)
+          ? saved.permanentTodos
+          : [...DEFAULT_PERMANENT_TODOS],
+      };
+      if (!Array.isArray(saved.permanentTodos)) {
+        savePreferences(loadedPreferences);
+      }
+      setPreferences(loadedPreferences);
       setShowSetup(false);
     }
     setIsLoading(false);
@@ -22,6 +32,11 @@ function App() {
   const handleSetupComplete = (newPreferences) => {
     setPreferences(newPreferences);
     setShowSetup(false);
+  };
+
+  const handlePreferencesChange = (newPreferences) => {
+    savePreferences(newPreferences);
+    setPreferences(newPreferences);
   };
 
   if (isLoading) return <div>Loading...</div>;
@@ -52,7 +67,11 @@ function App() {
               </button>
             </h1>
             <div className="mt-4">
-              <CircuitBreaker preferences={preferences} location={location} />
+              <CircuitBreaker
+                preferences={preferences}
+                location={location}
+                onPreferencesChange={handlePreferencesChange}
+              />
             </div>
           </div>
         )}

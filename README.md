@@ -10,6 +10,14 @@ After acknowledging a prompt, Cye stays paused for at least one minute. Set a
 longer pause in preferences; the next prompt appears when you reopen or return
 to Cye after the pause has elapsed.
 
+When task nudges are enabled, you can add recurring chores and one-time tasks
+in preferences. Recurring chores can be suggested repeatedly; mark one-time
+tasks done in preferences, or check “Mark this task done” on a one-time prompt
+before acknowledging it. Both lists are stored locally and remain saved while
+task nudges are turned off. New users start with a few example recurring
+chores, and short recurring prompts may get a gentle randomized prefix or
+suffix; one-time task wording is left as entered.
+
 ## Run locally
 
 You need Node.js (LTS) and npm. From the repository root:
