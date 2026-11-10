@@ -23,6 +23,17 @@ To try it on a phone connected to the same Wi-Fi, find this computer's local
 network IP address and open `http://<computer-ip>:5173` in the phone's browser.
 The dev server listens on network interfaces for this purpose.
 
+## Install as an app
+
+The app includes a web app manifest, Android-sized icons, and an Apple touch
+icon. Deploy it over HTTPS, then use the browser's "Install app" option on
+Android or "Add to Home Screen" in Safari on iOS. Localhost is treated as a
+secure context, but the local network address uses HTTP, so install options
+may be limited when testing on a phone.
+
+The app is not cached for offline use yet. Preferences remain stored locally in
+the browser on each device.
+
 ## Run with Docker
 
 With Docker Desktop running, start the development server from this directory:
