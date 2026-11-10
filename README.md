@@ -6,6 +6,9 @@ try a small activity. Prompts can be tailored to preferences saved during setup.
 
 Preferences are stored in the browser on the device using `localStorage`; the
 app does not currently use a server or sync data between devices.
+After acknowledging a prompt, Cye stays paused for at least one minute. Set a
+longer pause in preferences; the next prompt appears when you reopen or return
+to Cye after the pause has elapsed.
 
 ## Run locally
 
