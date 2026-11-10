@@ -9,9 +9,10 @@ app does not currently use a server or sync data between devices.
 
 ## Run locally
 
-You need Node.js (LTS) and npm. From this directory:
+You need Node.js (LTS) and npm. From the repository root:
 
 ```sh
+cd phone-pause
 npm ci
 npm run dev
 ```
@@ -45,14 +46,16 @@ Preferences remain stored locally in the browser on each device. The service
 worker is only enabled in production builds; the Vite development server does
 not register it.
 
-To try the offline build locally, run `npm run build` followed by
-`npm run preview`, open the preview on `http://localhost:4173`, and wait for the
-service worker to install. Reload once, then use the browser's offline mode and
-reload again to check that the cached app shell opens.
+To try the offline build locally, from `phone-pause/` run `npm run build`
+followed by `npm run preview`, open the preview on
+`http://localhost:4173`, and wait for the service worker to install. Reload
+once, then use the browser's offline mode and reload again to check that the
+cached app shell opens.
 
 ## Run with Docker
 
-With Docker Desktop running, start the development server from this directory:
+With Docker Desktop running, start the development server from the repository
+root:
 
 ```sh
 docker run --detach \
@@ -60,7 +63,7 @@ docker run --detach \
   --restart unless-stopped \
   --publish 5173:5173 \
   --publish 4173:4173 \
-  --volume "$PWD":/app \
+  --volume "$PWD/phone-pause":/app \
   --volume phone-pause-node-modules:/app/node_modules \
   --workdir /app \
   node:lts-bookworm-slim \
@@ -94,6 +97,7 @@ docker start phone-pause-dev
 ## Other commands
 
 ```sh
+cd phone-pause
 npm run build    # Create a production build in dist/
 npm run preview  # Serve the production build locally
 npm run lint     # Run ESLint
