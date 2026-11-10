@@ -14,6 +14,7 @@ function CircuitBreaker({ preferences, location, onPreferencesChange }) {
     };
   });
   const [prompt, setPrompt] = useState(null);
+  const [promptVersion, setPromptVersion] = useState(0);
   const [markOneTimeTodoDone, setMarkOneTimeTodoDone] = useState(false);
 
   const pickNewCircuitBreaker = useCallback(() => {
@@ -35,6 +36,7 @@ function CircuitBreaker({ preferences, location, onPreferencesChange }) {
         oneTimeTodoIndex: curr.oneTimeTodoIndex,
       });
     }
+    setPromptVersion((version) => version + 1);
     setMarkOneTimeTodoDone(false);
   }, [location, preferences]);
 
@@ -100,29 +102,27 @@ function CircuitBreaker({ preferences, location, onPreferencesChange }) {
     <div className="text-center">
       {cooldown.ready ? (
         <>
-          <div className="text-xl mb-8 text-gray-100">
-            {prompt?.content}
+          <div key={promptVersion} className="circuit-breaker-prompt">
+            <div className="text-xl mb-8 text-gray-100">{prompt?.content}</div>
+            {Number.isInteger(prompt?.oneTimeTodoIndex) && (
+              <label className="mb-6 flex items-center justify-center gap-2 text-gray-300">
+                <input
+                  type="checkbox"
+                  checked={markOneTimeTodoDone}
+                  onChange={(event) =>
+                    setMarkOneTimeTodoDone(event.target.checked)
+                  }
+                />
+                Mark this task done
+              </label>
+            )}
+            <button
+              onClick={handleAcknowledge}
+              className="mb-8 rounded-lg border border-blue-800 bg-blue-900 px-6 py-3 font-medium text-blue-100 shadow-md transition-colors hover:bg-blue-800 active:bg-blue-950 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-400 focus-visible:ring-offset-2 focus-visible:ring-offset-gray-900"
+            >
+              Ok. Thank you, me
+            </button>
           </div>
-          {Number.isInteger(prompt?.oneTimeTodoIndex) && (
-            <label className="mb-6 flex items-center justify-center gap-2 text-gray-300">
-              <input
-                type="checkbox"
-                checked={markOneTimeTodoDone}
-                onChange={(event) =>
-                  setMarkOneTimeTodoDone(event.target.checked)
-                }
-              />
-              Mark this task done
-            </label>
-          )}
-          <button
-            onClick={handleAcknowledge}
-            className="px-6 py-3 mb-8 bg-gray-800 hover:bg-gray-700 hover:text-gray-300 text-gray-500
-                       rounded transition-colors focus:ring-2 focus:ring-gray-600
-                       focus:ring-offset-2 focus:ring-offset-gray-900"
-          >
-            Ok. Thank you, me
-          </button>
         </>
       ) : (
         <div className="text-gray-500" aria-live="polite">

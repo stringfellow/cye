@@ -13,3 +13,17 @@ body {
   min-width: 100%;
   min-height: 100vh;
 }
+
+@keyframes cye-prompt-fade {
+  from {
+    opacity: 1;
+  }
+
+  to {
+    opacity: 0;
+  }
+}
+
+.circuit-breaker-prompt {
+  animation: cye-prompt-fade 120s linear 30s forwards;
+}

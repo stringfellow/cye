@@ -9,6 +9,8 @@ app does not currently use a server or sync data between devices.
 After acknowledging a prompt, Cye stays paused for at least one minute. Set a
 longer pause in preferences; the next prompt appears when you reopen or return
 to Cye after the pause has elapsed.
+If left untouched, a prompt and its button begin to fade after 30 seconds and
+fade out over the next two minutes.
 
 When task nudges are enabled, you can add recurring chores and one-time tasks
 in preferences. Recurring chores can be suggested repeatedly; mark one-time
